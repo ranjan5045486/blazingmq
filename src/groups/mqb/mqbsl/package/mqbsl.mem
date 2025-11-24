@@ -1,5 +1,6 @@
 mqbsl_inmemorylog
 mqbsl_ledger
+mqbsl_lmdblog
 mqbsl_memorymappedondisklog
 mqbsl_ondisklog
 mqbsl_readwriteondisklog
