@@ -546,6 +546,20 @@
     </restriction>
   </simpleType>
 
+  <simpleType name='ClusterStateLogType'>
+    <annotation>
+      <documentation>
+        Enumeration of cluster state log storage types:
+        - E_FILE_BACKED: traditional file-backed storage (memory-mapped)
+        - E_LMDB:        LMDB-backed persistent storage
+      </documentation>
+    </annotation>
+    <restriction base='string' bdem:preserveEnumOrder='1'>
+      <enumeration value='E_FILE_BACKED' bdem:id='0'/>
+      <enumeration value='E_LMDB'        bdem:id='1'/>
+    </restriction>
+  </simpleType>
+
   <complexType name='PartitionConfig'>
     <annotation>
       <documentation>
@@ -566,6 +580,8 @@
                                page tables for a mapping.
         flushAtShutdown......: flag to indicate whether broker should flush
                                storage files to disk at shutdown
+        cslStorageType.......: type of storage to use for cluster state ledger
+                               (E_FILE_BACKED or E_LMDB)
         syncConfig...........: configuration for storage synchronization and
                                recovery
       </documentation>
@@ -582,6 +598,7 @@
       <element name='maxArchivedFileSets' type='int'/>
       <element name='prefaultPages'       type='boolean' default='false'/>
       <element name='flushAtShutdown'     type='boolean' default='true'/>
+      <element name='cslStorageType'      type='tns:ClusterStateLogType' default='E_FILE_BACKED'/>
       <element name='syncConfig'          type='tns:StorageSyncConfig'/>
     </sequence>
   </complexType>

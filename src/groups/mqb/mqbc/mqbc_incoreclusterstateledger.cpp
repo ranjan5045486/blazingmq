@@ -33,6 +33,7 @@
 #include <mqbs_storageutil.h>
 #include <mqbsi_log.h>
 #include <mqbsl_ledger.h>
+#include <mqbsl_lmdblog.h>
 #include <mqbsl_memorymappedondisklog.h>
 #include <mqbu_exit.h>
 #include <mqbu_storagekey.h>
@@ -1185,6 +1186,23 @@ IncoreClusterStateLedger::IncoreClusterStateLedger(
             IncoreClusterStateLeger_LogIdGenerator(d_allocator_p),
         d_allocator_p);
 
+    // Create appropriate log factory based on configuration
+    // TODO: Once the schema is regenerated, check partitionCfg.cslStorageType()
+    //       to determine which factory to use:
+    //       if (partitionCfg.cslStorageType() == 
+    //           mqbcfg::ClusterStateLogType::E_LMDB) {
+    //           use LmdbLogFactory
+    //       } else {
+    //           use MemoryMappedOnDiskLogFactory (default)
+    //       }
+    //
+    // For now, we default to MemoryMappedOnDiskLogFactory for backward
+    // compatibility. To use LMDB, this code would need to be updated to:
+    //   bsl::shared_ptr<mqbsi::LogFactory> logFactory(
+    //       new (*d_allocator_p)
+    //           mqbsl::LmdbLogFactory(d_allocator_p, d_blobSpPool_p.get()),
+    //       d_allocator_p);
+    
     bsl::shared_ptr<mqbsi::LogFactory> logFactory(
         new (*d_allocator_p)
             mqbsl::MemoryMappedOnDiskLogFactory(d_allocator_p),
