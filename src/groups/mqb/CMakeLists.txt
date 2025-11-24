@@ -45,3 +45,7 @@ target_sources(bmqbrkr_plugins PUBLIC FILE_SET HEADERS
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     target_link_libraries( mqb PUBLIC dl )
 endif()
+
+# Link LMDB library
+find_package(lmdb CONFIG REQUIRED)
+target_link_libraries( mqb PUBLIC lmdb )
