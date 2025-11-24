@@ -39,7 +39,7 @@ namespace mqbsl {
 namespace {
 
 // CONSTANTS
-const size_t k_LMDB_MAP_SIZE = 10UL * 1024 * 1024 * 1024;  // 10GB default
+const size_t k_LMDB_DEFAULT_MAP_SIZE = 10UL * 1024 * 1024 * 1024;  // 10GB default
 
 /// Convert LMDB error code to LogOpResult
 mqbsi::LogOpResult::Enum convertLmdbError(int rc)
@@ -220,8 +220,11 @@ int LmdbLog::open(int flags)
         return convertLmdbError(rc);  // RETURN
     }
 
-    // Set map size
-    rc = mdb_env_set_mapsize(d_env, k_LMDB_MAP_SIZE);
+    // Set map size - use configured max size or default
+    size_t mapSize = d_config.maxSize() > 0 
+                     ? static_cast<size_t>(d_config.maxSize())
+                     : k_LMDB_DEFAULT_MAP_SIZE;
+    rc = mdb_env_set_mapsize(d_env, mapSize);
     if (rc != 0) {
         mdb_env_close(d_env);
         d_env = 0;
@@ -268,8 +271,11 @@ int LmdbLog::open(int flags)
 
     rc = mdb_txn_commit(txn);
     if (rc != 0) {
+        // Note: Database handle d_dbi is automatically closed when the 
+        // environment is closed, so we don't need to explicitly close it here
         mdb_env_close(d_env);
         d_env = 0;
+        d_dbi = 0;
         return convertLmdbError(rc);  // RETURN
     }
 
@@ -318,6 +324,7 @@ int LmdbLog::close()
         // Close database handle (implicitly done when closing env)
         mdb_env_close(d_env);
         d_env = 0;
+        d_dbi = 0;
     }
 
     d_logState = LogState::e_CLOSED;

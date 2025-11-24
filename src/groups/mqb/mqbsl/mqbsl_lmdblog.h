@@ -247,7 +247,7 @@ class LmdbLog BSLS_KEYWORD_FINAL : public mqbsi::Log {
     int
     alias(void** entry, int length, Offset offset) const BSLS_KEYWORD_OVERRIDE;
 
-    /// Load into the specified `entry a reference to the specified `length'
+    /// Load into the specified `entry` a reference to the specified `length`
     /// bytes starting at the specified `offset` of the log, and return 0 on
     /// success, or a negative value LogOpResult on error.
     int alias(bdlbb::Blob* entry,

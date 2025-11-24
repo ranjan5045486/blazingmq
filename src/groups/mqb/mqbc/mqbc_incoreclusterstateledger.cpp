@@ -1189,8 +1189,7 @@ IncoreClusterStateLedger::IncoreClusterStateLedger(
     // Create appropriate log factory based on configuration
     // TODO: Once the schema is regenerated, check partitionCfg.cslStorageType()
     //       to determine which factory to use:
-    //       if (partitionCfg.cslStorageType() == 
-    //           mqbcfg::ClusterStateLogType::E_LMDB) {
+    //       if (partitionCfg.cslStorageType() == mqbcfg::ClusterStateLogType::E_LMDB) {
     //           use LmdbLogFactory
     //       } else {
     //           use MemoryMappedOnDiskLogFactory (default)
