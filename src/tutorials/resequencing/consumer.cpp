@@ -323,9 +323,50 @@ class ResequencingBuffer {
             return false;
         }
 
-        msg->d_sequenceId = bsl::stoll(serialized.substr(0, pos1));
+        // Safely parse numeric values with validation
+        bsls::Types::Int64 seqIdParsed = 0;
+        int                payloadLen  = 0;
+
+        // Parse sequence ID safely with overflow protection
+        bsl::string seqStr = serialized.substr(0, pos1);
+        if (seqStr.empty()) {
+            return false;  // Empty sequence ID
+        }
+        const bsls::Types::Int64 k_MAX_SEQ = 9223372036854775807LL / 10;
+        for (size_t i = 0; i < seqStr.length(); ++i) {
+            if (seqStr[i] < '0' || seqStr[i] > '9') {
+                return false;  // Invalid character
+            }
+            if (seqIdParsed > k_MAX_SEQ) {
+                return false;  // Would overflow
+            }
+            seqIdParsed = seqIdParsed * 10 + (seqStr[i] - '0');
+        }
+
+        // Parse payload length safely with overflow protection
+        bsl::string lenStr = serialized.substr(pos2 + 1, pos3 - pos2 - 1);
+        if (lenStr.empty()) {
+            return false;  // Empty payload length
+        }
+        const int k_MAX_LEN = 2147483647 / 10;
+        for (size_t i = 0; i < lenStr.length(); ++i) {
+            if (lenStr[i] < '0' || lenStr[i] > '9') {
+                return false;  // Invalid character
+            }
+            if (payloadLen > k_MAX_LEN) {
+                return false;  // Would overflow
+            }
+            payloadLen = payloadLen * 10 + (lenStr[i] - '0');
+        }
+
+        // Validate payload length against remaining data
+        size_t remainingLen = serialized.length() - (pos3 + 1);
+        if (payloadLen < 0 || static_cast<size_t>(payloadLen) > remainingLen) {
+            return false;  // Invalid payload length
+        }
+
+        msg->d_sequenceId = seqIdParsed;
         msg->d_entityId   = serialized.substr(pos1 + 1, pos2 - pos1 - 1);
-        int payloadLen    = bsl::stoi(serialized.substr(pos2 + 1, pos3 - pos2 - 1));
         msg->d_payload    = serialized.substr(pos3 + 1, payloadLen);
 
         return true;
