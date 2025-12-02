@@ -53,6 +53,7 @@
 #include <bsl_cstring.h>
 #include <bsl_functional.h>
 #include <bsl_iostream.h>
+#include <bsl_limits.h>
 #include <bsl_memory.h>
 #include <bsl_sstream.h>
 #include <bsl_string.h>
@@ -332,12 +333,13 @@ class ResequencingBuffer {
         if (seqStr.empty()) {
             return false;  // Empty sequence ID
         }
-        const bsls::Types::Int64 k_MAX_SEQ = 9223372036854775807LL / 10;
+        const bsls::Types::Int64 k_MAX_SEQ_DIVISOR =
+            bsl::numeric_limits<bsls::Types::Int64>::max() / 10;
         for (size_t i = 0; i < seqStr.length(); ++i) {
             if (seqStr[i] < '0' || seqStr[i] > '9') {
                 return false;  // Invalid character
             }
-            if (seqIdParsed > k_MAX_SEQ) {
+            if (seqIdParsed > k_MAX_SEQ_DIVISOR) {
                 return false;  // Would overflow
             }
             seqIdParsed = seqIdParsed * 10 + (seqStr[i] - '0');
@@ -348,12 +350,12 @@ class ResequencingBuffer {
         if (lenStr.empty()) {
             return false;  // Empty payload length
         }
-        const int k_MAX_LEN = 2147483647 / 10;
+        const int k_MAX_LEN_DIVISOR = bsl::numeric_limits<int>::max() / 10;
         for (size_t i = 0; i < lenStr.length(); ++i) {
             if (lenStr[i] < '0' || lenStr[i] > '9') {
                 return false;  // Invalid character
             }
-            if (payloadLen > k_MAX_LEN) {
+            if (payloadLen > k_MAX_LEN_DIVISOR) {
                 return false;  // Would overflow
             }
             payloadLen = payloadLen * 10 + (lenStr[i] - '0');
@@ -431,8 +433,23 @@ class ResequencingBuffer {
             return 1;
         }
 
-        bsl::string value(static_cast<char*>(mdbData.mv_data), mdbData.mv_size);
-        return bsl::stoll(value);
+        // Safely parse the sequence number
+        bsl::string        value(static_cast<char*>(mdbData.mv_data), mdbData.mv_size);
+        bsls::Types::Int64 result = 0;
+        const bsls::Types::Int64 k_MAX_DIVISOR =
+            bsl::numeric_limits<bsls::Types::Int64>::max() / 10;
+
+        for (size_t i = 0; i < value.length(); ++i) {
+            if (value[i] < '0' || value[i] > '9') {
+                return 1;  // Invalid character, return default
+            }
+            if (result > k_MAX_DIVISOR) {
+                return 1;  // Overflow, return default
+            }
+            result = result * 10 + (value[i] - '0');
+        }
+
+        return result;
     }
 
     /// Update the next expected sequence ID for an entity.  Returns 0 on success.
