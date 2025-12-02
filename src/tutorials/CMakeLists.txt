@@ -65,4 +65,5 @@ add_custom_target("tutorials")
 # Add each tutorial
 add_subdirectory("advanced")
 add_subdirectory("hello_world")
+add_subdirectory("resequencing")
 add_subdirectory("subscriptions")
